@@ -1,0 +1,189 @@
+<html><head>
+    <!--- D3 Import --->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <style>
+      /* .gridlines line {
+        stroke: #bbb;
+      }
+      .gridlines .domain {
+        stroke: none;
+      } */
+      .outline {
+      fill: none;
+      stroke: #b3a6a8;
+      stroke-width: 1px;
+      }
+      .hood {
+      fill: #edeef0;
+      }
+      .graticule {
+        fill: none;
+        stroke: grey;
+        stroke-width: 1px;
+    }
+    </style>
+  </head>
+  <body>
+    <h3>Name: Sarah Golder Springer | NetID: sg2438</h3>
+    <h1>When were the trees of San Francisco planted?</h1>
+     
+    <script>
+        const requestData = async() => {
+        let data = await d3.csv("Street_Tree_List-2022-01-30_FILTERED.csv");
+        const sf = await d3.json("SF-Neighborhoods.geo.json");
+        console.log(data);
+        console.log(sf);
+
+        //Clean up data
+        data = data.filter((d) => { return d.PlantDate != "" && d.PlantDate != undefined
+                                            && d.PlantDate != NaN})
+        data.forEach((d) => {
+            let date = new Date(d.PlantDate)
+            d.Year = date.getFullYear();
+        });
+
+        //Create SVG
+        const body = d3.select("body")
+                        .append("svg")
+                        .attr("id","plot")
+                        .attr("width", 800)
+                        .attr("height", 800)
+                        //.style("background", "#fbfbfb")
+
+        const svg = d3.select("#plot")
+
+        //Margins / Padding
+        const width = svg.attr("width")
+        const height = svg.attr("height")
+        const margin = {top: 20, bottom: 50, left:50, right: 50}
+        const mapWidth = width - margin.right - margin.left
+        const mapHeight = height - margin.top - margin.bottom
+
+        //Extents / Scales
+        const yearExtent = d3.extent(data, d => d["Year"])
+        console.log(yearExtent)
+        const colorScale = d3.scaleOrdinal()
+                                .domain(yearExtent)
+                                .range(["#004B23","#006400","#008000","#38B000","#70E000","#9EF01A",])                        
+        //Color Scheme Source: https://coolors.co/palette/004b23-006400-007200-008000-38b000-70e000-9ef01a-ccff33
+
+
+        //Set up Map
+        var hoods = topojson.feature(sf, sf.objects.SFNeighborhoods)
+        var hoodsMesh = topojson.mesh(sf, sf.objects.SFNeighborhoods)
+        var projection = d3.geoMercator().fitSize([mapWidth, mapHeight], hoods)
+        var path = d3.geoPath().projection(projection)
+        let graticule = d3.geoGraticule10();
+        svg.append("path").attr("class","graticule").attr("d", path(graticule))
+
+        let hoodPaths = svg.selectAll("path.hood").data(hoods.features)
+                            .join("path")
+                            .attr("class", "hood")
+                            .attr("d", path)
+                            .attr("transform","translate("+margin.left+","+margin.top+")")
+
+        svg.append("path").datum(hoodsMesh)
+            .attr("class", "outline")
+            .attr("d", path)
+            .attr("transform","translate("+margin.left+","+margin.top+")")
+
+
+        //Tree circles
+        const map = svg.append("g")
+                    .attr("id", "trees")
+                    .attr("transform","translate("+margin.left+","+margin.top+")")
+
+        data.forEach( d => {
+          d.Pos = projection([d.Longitude, d.Latitude])
+        })
+
+        let trees = map.selectAll("circle").data(data)
+                        .join("circle")
+                        .attr("cx", d => d.Pos[0])
+                        .attr("cy", d => d.Pos[1])
+                        .attr("r", 1.5)
+                        .style("fill", d => colorScale(d["Year"]))
+                        .attr("opacity", 0.9)
+
+        //Legend
+        d3.select("body")
+                  .append("svg")
+                  .attr("id","legend")
+                  .attr("width", 600)
+                  .attr("height", 100)
+                  .attr("transform","translate("+margin.left+")")
+
+        const legend = d3.select("#legend")
+
+        let green1  = legend.append("rect")
+                            .attr("x", 0)
+                            .attr("y", 0)
+                            .attr("width", 100)
+                            .attr("height", 50)
+                            .style("fill", "#004B23")
+
+        let green2  = legend.append("rect")
+                            .attr("x", 100)
+                            .attr("y", 0)
+                            .attr("width", 100)
+                            .attr("height", 50)
+                            .style("fill", "#006400")
+        
+        let green3  = legend.append("rect")
+                            .attr("x", 200)
+                            .attr("y", 0)
+                            .attr("width", 100)
+                            .attr("height", 50)
+                            .style("fill", "#008000")
+
+        let green4  = legend.append("rect")
+                            .attr("x", 300)
+                            .attr("y", 0)
+                            .attr("width", 100)
+                            .attr("height", 50)
+                            .style("fill", "#38B000")
+
+        let green5  = legend.append("rect")
+                            .attr("x", 400)
+                            .attr("y", 0)
+                            .attr("width", 100)
+                            .attr("height", 50)
+                            .style("fill","#70E000")
+        
+        let green6  = legend.append("rect")
+                            .attr("x", 500)
+                            .attr("y", 0)
+                            .attr("width", 100)
+                            .attr("height", 50)
+                            .style("fill","#9EF01A")
+
+        let oldestYear = legend.append("text")
+                            .attr("x", 0)
+                            .attr("y", 75)
+                            .text(yearExtent[0])
+                            .style("fill", "black")
+                            .style("font-size", 20)
+
+        let newestYear = legend.append("text")
+                            .attr("x", 560)
+                            .attr("y", 75)
+                            .text(yearExtent[1])
+                            .style("fill", "black")
+                            .style("font-size", 20)
+        
+                            
+                            
+        console.log(yearExtent)
+
+
+
+
+
+        }
+
+        
+        requestData();
+    
+    </script>
+  </body></html>

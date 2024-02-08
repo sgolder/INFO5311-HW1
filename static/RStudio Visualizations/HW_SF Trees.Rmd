@@ -1,0 +1,106 @@
+---
+title: "HW1_SF Trees"
+output: html_document
+date: "2024-02-01"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Datasets
+
+```{r cars}
+raw_trees <- read.csv("C:/Users/golde/Data-Visualization/hw1/Street_Tree_List-2022-01-30_RAW.csv")
+fil_trees <- read.csv("C:/Users/golde/Data-Visualization/hw1/Street_Tree_List-2022-01-30_FILTERED.csv")
+```
+
+## Summary Stats
+
+```{r}
+table(fil_trees$qLegalStatus)
+
+plot(fil_trees$Latitude, fil_trees$Longitude, pch = 20)
+```
+
+Might be most interesting to contrast where the newest/oldest trees are
+
+## DateTime and Histogram
+
+```{r}
+
+library(lubridate)
+fil_trees <- fil_trees[!fil_trees$PlantDate == "",]
+fil_trees <- fil_trees[!is.na(fil_trees$PlantDate),]
+
+fil_trees$PlantDate <- substr(fil_trees$PlantDate,1,7)
+fil_trees$PlantDate <- strptime(fil_trees$PlantDate, format = "%d/%m/%y")
+
+hist(fil_trees$PlantDate, breaks = 10)
+hist(year(fil_trees$PlantDate))
+
+```
+
+## Plot location by year
+
+```{r}
+fil_trees$color <- "gray"
+
+fil_trees$color <- ifelse(year(fil_trees$PlantDate) == "1990" |
+                            year(fil_trees$PlantDate) == "1991" |
+                            year(fil_trees$PlantDate) == "1992" |
+                            year(fil_trees$PlantDate) == "1993" |
+                            year(fil_trees$PlantDate) == "1994" ,
+                          "red", fil_trees$color)
+
+fil_trees$color <- ifelse(year(fil_trees$PlantDate) == "1995" |
+                            year(fil_trees$PlantDate) == "1996" |
+                            year(fil_trees$PlantDate) == "1997" |
+                            year(fil_trees$PlantDate) == "1998" |
+                            year(fil_trees$PlantDate) == "1999" ,
+                          "orange", fil_trees$color)
+
+fil_trees$color <- ifelse(year(fil_trees$PlantDate) == "2000" | year(fil_trees$PlantDate) == "2001" | year(fil_trees$PlantDate) == "2002" |
+                            year(fil_trees$PlantDate) == "2003" | 
+                            year(fil_trees$PlantDate) == "2004" | 
+                            year(fil_trees$PlantDate) == "2005" ,
+                           "yellow", fil_trees$color)
+
+fil_trees$color <- ifelse(year(fil_trees$PlantDate) == "2006" |
+                            year(fil_trees$PlantDate) == "2007" |
+                            year(fil_trees$PlantDate) == "2008" |
+                            year(fil_trees$PlantDate) == "2009" |
+                            year(fil_trees$PlantDate) == "2010" ,
+                          "green", fil_trees$color)
+
+fil_trees$color <- ifelse(year(fil_trees$PlantDate) == "2011" |
+                            year(fil_trees$PlantDate) == "2012" |
+                            year(fil_trees$PlantDate) == "2013" |
+                            year(fil_trees$PlantDate) == "2014" |
+                            year(fil_trees$PlantDate) == "2015" ,
+                          "blue", fil_trees$color)
+
+fil_trees$color <- ifelse(year(fil_trees$PlantDate) == "2016" |
+                            year(fil_trees$PlantDate) == "2017" |
+                            year(fil_trees$PlantDate) == "2018" |
+                            year(fil_trees$PlantDate) == "2019" |
+                            year(fil_trees$PlantDate) == "2020" ,
+                          "purple", fil_trees$color)
+
+fil_trees$color <- ifelse(year(fil_trees$PlantDate) == "2021" |
+                            year(fil_trees$PlantDate) == "2022" |
+                            year(fil_trees$PlantDate) == "2023" |
+                            year(fil_trees$PlantDate) == "2024" ,
+                          "pink", fil_trees$color)
+                            
+                            
+
+
+plot(fil_trees$Latitude, fil_trees$Longitude, 
+     pch = 20, col = fil_trees$color)
+```
+
+
+
